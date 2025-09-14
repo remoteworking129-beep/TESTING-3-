@@ -13,6 +13,13 @@ export default defineConfig(({ mode }) => ({
       "localhost",
       "127.0.0.1"
     ],
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
 
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Plus, History, Trash2 } from "lucide-react";
+import { chatApi } from "@/utils/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -24,6 +26,7 @@ interface ChatSession {
 }
 
 const ChatPage = () => {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -32,6 +35,7 @@ const ChatPage = () => {
       timestamp: new Date().toLocaleTimeString()
     }
   ]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(undefined);
 
   const [chatSessions] = useState<ChatSession[]>([
     {
@@ -76,33 +80,48 @@ const ChatPage = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      // Make real API call to backend
+      const response = await chatApi.sendMessage(content, currentSessionId);
+      
+      if (response.success && response.data) {
+        // Set session ID for future messages if this is a new session
+        if (!currentSessionId && response.data.sessionId) {
+          setCurrentSessionId(response.data.sessionId);
+        }
+
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: response.data.response,
+          isUser: false,
+          timestamp: new Date().toLocaleTimeString()
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        throw new Error(response.error || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('Chat API error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message. Please try again."
+      });
+      
+      // Add error message to chat
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: getAIResponse(content),
+        content: "Sorry, I'm having trouble connecting right now. Please try again later.",
         isUser: false,
         timestamp: new Date().toLocaleTimeString()
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
-  };
-
-  const getAIResponse = (userMessage: string): string => {
-    // Simple response logic - in real app this would call the backend
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('temperature') || lowerMessage.includes('warm')) {
-      return "Ocean temperatures have been showing interesting patterns. Based on recent data, we're seeing a 0.6°C increase in global ocean temperatures over the past decade. The North Atlantic shows particularly notable warming trends. Would you like me to show you specific regional data or time series analysis?";
-    } else if (lowerMessage.includes('coral') || lowerMessage.includes('reef')) {
-      return "Coral reefs are indeed facing challenges from rising ocean temperatures and acidification. Current monitoring shows that approximately 50% of coral reefs worldwide have experienced some level of bleaching in recent years. The Great Barrier Reef and Caribbean reefs are particularly affected. I can provide detailed satellite imagery analysis or water quality data if you're interested.";
-    } else if (lowerMessage.includes('tide') || lowerMessage.includes('current')) {
-      return "Tidal patterns and ocean currents are fascinating! Current models show the Gulf Stream is maintaining its strength, though there are seasonal variations. For specific tide predictions, I can access real-time NOAA data for any coastal location. Which region are you interested in exploring?";
-    } else {
-      return "That's a great question about ocean science! I have access to comprehensive datasets including satellite imagery, buoy measurements, marine life tracking, and climate models. I can help you analyze trends, generate visualizations, or dive deeper into specific oceanographic phenomena. What aspect interests you most?";
     }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col relative">
