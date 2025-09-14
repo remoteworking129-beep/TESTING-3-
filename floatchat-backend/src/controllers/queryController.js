@@ -13,10 +13,10 @@ const translateAndExecute = async (req, res) => {
       return res.status(400).json(apiResponse.error('Validation failed', errors.array()));
     }
 
-    const { question } = req.body;
-    const userId = req.user.id;
+    const { question, userId } = req.body;
+    const finalUserId = userId || 'anonymous-user';
 
-    logger.info(`Query translation requested by user ${userId}: ${question}`);
+    logger.info(`Query translation requested by user ${finalUserId}: ${question}`);
 
     // TODO: Implement actual natural language to MongoDB query translation
     // For now, return a placeholder response
@@ -46,10 +46,10 @@ const explainQuery = async (req, res) => {
       return res.status(400).json(apiResponse.error('Validation failed', errors.array()));
     }
 
-    const { question } = req.body;
-    const userId = req.user.id;
+    const { question, userId } = req.body;
+    const finalUserId = userId || 'anonymous-user';
 
-    logger.info(`Query explanation requested by user ${userId}: ${question}`);
+    logger.info(`Query explanation requested by user ${finalUserId}: ${question}`);
 
     // TODO: Implement actual query explanation logic
     const explanation = {

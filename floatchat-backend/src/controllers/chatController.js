@@ -13,19 +13,20 @@ const sendMessage = async (req, res) => {
       return res.status(400).json(apiResponse.error('Validation failed', errors.array()));
     }
 
-    const { question, sessionId } = req.body;
-    const userId = req.user.id;
+    const { question, sessionId, userId } = req.body;
+    // Use a default userId if none provided
+    const finalUserId = userId || 'anonymous-user';
 
     // Create or find chat session
     let chatSession;
     if (sessionId) {
-      chatSession = await ChatSession.findOne({ _id: sessionId, userId });
+      chatSession = await ChatSession.findOne({ _id: sessionId, userId: finalUserId });
       if (!chatSession) {
         return res.status(404).json(apiResponse.error('Chat session not found'));
       }
     } else {
       chatSession = new ChatSession({
-        userId,
+        userId: finalUserId,
         messages: []
       });
     }
@@ -49,7 +50,7 @@ const sendMessage = async (req, res) => {
 
     await chatSession.save();
 
-    logger.info(`Chat message processed for user ${userId}`);
+    logger.info(`Chat message processed for user ${finalUserId}`);
 
     res.json(apiResponse.success('Message sent successfully', {
       sessionId: chatSession._id,
@@ -73,17 +74,17 @@ const simulateChain = async (req, res) => {
       return res.status(400).json(apiResponse.error('Validation failed', errors.array()));
     }
 
-    const { query } = req.body;
-    const userId = req.user.id;
+    const { query, userId } = req.body;
+    const finalUserId = userId || 'anonymous-user';
 
-    logger.info(`Chain simulation requested by user ${userId}: ${query}`);
+    logger.info(`Chain simulation requested by user ${finalUserId}: ${query}`);
 
     // TODO: Implement actual chain simulation logic
     const simulationResult = {
       query,
       simulation: "Chain simulation placeholder - implement actual logic",
       timestamp: new Date(),
-      userId
+      userId: finalUserId
     };
 
     res.json(apiResponse.success('Chain simulation completed', simulationResult));
@@ -99,20 +100,21 @@ const simulateChain = async (req, res) => {
  */
 const getChatHistory = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { userId } = req.query;
+    const finalUserId = userId || 'anonymous-user';
     const { page = 1, limit = 10 } = req.query;
 
     const skip = (page - 1) * limit;
 
-    const chatSessions = await ChatSession.find({ userId })
+    const chatSessions = await ChatSession.find({ userId: finalUserId })
       .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .select('_id messages updatedAt createdAt');
 
-    const total = await ChatSession.countDocuments({ userId });
+    const total = await ChatSession.countDocuments({ userId: finalUserId });
 
-    logger.info(`Chat history retrieved for user ${userId}`);
+    logger.info(`Chat history retrieved for user ${finalUserId}`);
 
     res.json(apiResponse.success('Chat history retrieved', {
       sessions: chatSessions,

@@ -1,19 +1,9 @@
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const jwtConfig = require('../config/jwt');
 const logger = require('../config/logger');
 
 class AuthService {
-  generateToken(userId) {
-    return jwt.sign({ userId }, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn });
-  }
-
-  verifyToken(token) {
-    return jwt.verify(token, jwtConfig.secret);
-  }
-
   async register(userData) {
-    const { email, password, firstName, lastName } = userData;
+    const { email, password, firstName, lastName, name } = userData;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -25,12 +15,9 @@ class AuthService {
     const user = await User.create({
       email,
       password,
-      firstName,
-      lastName
+      firstName: firstName || name,
+      lastName: lastName || ''
     });
-
-    // Generate token
-    const token = this.generateToken(user._id);
 
     logger.info(`New user registered: ${email}`);
 
@@ -41,8 +28,7 @@ class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         profileImageUrl: user.profileImageUrl
-      },
-      token
+      }
     };
   }
 
@@ -63,9 +49,6 @@ class AuthService {
     user.lastLoginAt = new Date();
     await user.save();
 
-    // Generate token
-    const token = this.generateToken(user._id);
-
     logger.info(`User logged in: ${email}`);
 
     return {
@@ -75,8 +58,7 @@ class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         profileImageUrl: user.profileImageUrl
-      },
-      token
+      }
     };
   }
 
