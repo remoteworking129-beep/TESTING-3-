@@ -36,9 +36,14 @@ interface ChatHistoryResponse {
   };
 }
 
-// Get authentication token from localStorage
-const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
+// Get current user ID from localStorage
+const getCurrentUserId = (): string | null => {
+  return localStorage.getItem('currentUserId');
+};
+
+// Set current user ID in localStorage
+const setCurrentUserId = (userId: string): void => {
+  localStorage.setItem('currentUserId', userId);
 };
 
 // Generic API request function
@@ -46,15 +51,9 @@ const apiRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
-  const token = getAuthToken();
-  
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
-  if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
-  }
 
   const config: RequestInit = {
     ...options,
@@ -81,46 +80,68 @@ const apiRequest = async <T>(
 
 // Authentication API calls
 export const authApi = {
-  login: async (email: string, password: string): Promise<ApiResponse<{ token: string; user: any }>> => {
-    return apiRequest('/api/auth/login', {
+  login: async (email: string, password: string): Promise<ApiResponse<{ user: any }>> => {
+    const response = await apiRequest<ApiResponse<{ user: any }>>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+    
+    // Store user ID for future requests
+    if (response.success && response.data?.user?.id) {
+      setCurrentUserId(response.data.user.id);
+    }
+    
+    return response;
   },
 
-  register: async (email: string, password: string, name: string): Promise<ApiResponse<{ token: string; user: any }>> => {
-    return apiRequest('/api/auth/register', {
+  register: async (email: string, password: string, name: string): Promise<ApiResponse<{ user: any }>> => {
+    const response = await apiRequest<ApiResponse<{ user: any }>>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });
+    
+    // Store user ID for future requests
+    if (response.success && response.data?.user?.id) {
+      setCurrentUserId(response.data.user.id);
+    }
+    
+    return response;
   },
 
   logout: async (): Promise<ApiResponse<{}>> => {
-    return apiRequest('/api/auth/logout', {
+    const response = await apiRequest<ApiResponse<{}>>('/api/auth/logout', {
       method: 'POST',
     });
+    
+    // Clear stored user ID
+    localStorage.removeItem('currentUserId');
+    
+    return response;
   },
 };
 
 // Chat API calls  
 export const chatApi = {
   sendMessage: async (question: string, sessionId?: string): Promise<ApiResponse<ChatMessage>> => {
+    const userId = getCurrentUserId();
     return apiRequest('/api/chat/message', {
       method: 'POST',
-      body: JSON.stringify({ question, sessionId }),
+      body: JSON.stringify({ question, sessionId, userId }),
     });
   },
 
   getChatHistory: async (page: number = 1, limit: number = 10): Promise<ApiResponse<ChatHistoryResponse>> => {
-    return apiRequest(`/api/chat/history?page=${page}&limit=${limit}`, {
+    const userId = getCurrentUserId();
+    return apiRequest(`/api/chat/history?page=${page}&limit=${limit}&userId=${userId}`, {
       method: 'GET',
     });
   },
 
   simulateChain: async (query: string): Promise<ApiResponse<any>> => {
+    const userId = getCurrentUserId();
     return apiRequest('/api/chat/simulate', {
       method: 'POST', 
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, userId }),
     });
   },
 };
@@ -128,16 +149,18 @@ export const chatApi = {
 // Query API calls
 export const queryApi = {
   translateAndExecute: async (question: string): Promise<ApiResponse<any>> => {
+    const userId = getCurrentUserId();
     return apiRequest('/api/query/translate', {
       method: 'POST',
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, userId }),
     });
   },
 
   explainQuery: async (question: string): Promise<ApiResponse<any>> => {
+    const userId = getCurrentUserId();
     return apiRequest('/api/query/explain', {
       method: 'POST',
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, userId }),
     });
   },
 };
@@ -145,7 +168,11 @@ export const queryApi = {
 // User API calls
 export const userApi = {
   getProfile: async (): Promise<ApiResponse<any>> => {
-    return apiRequest('/api/users/profile', {
+    const userId = getCurrentUserId();
+    if (!userId) {
+      throw new Error('No user logged in');
+    }
+    return apiRequest(`/api/users/profile/${userId}`, {
       method: 'GET',
     });
   },
@@ -157,6 +184,9 @@ export const userApi = {
     });
   },
 };
+
+// Export utility functions
+export { getCurrentUserId, setCurrentUserId };
 
 // Image API calls
 export const imageApi = {
