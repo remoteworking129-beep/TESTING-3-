@@ -24,3 +24,8 @@
 {"level":"info","message":"FloatChat Backend Server running on port 3000","service":"floatchat-backend","timestamp":"2025-09-14T13:45:54.128Z"}
 {"level":"info","message":"Environment: undefined","service":"floatchat-backend","timestamp":"2025-09-14T13:45:54.132Z"}
 {"level":"info","message":"MongoDB Connected: ac-e7ldeur-shard-00-01.zwhg8bs.mongodb.net:27017/floatchat","service":"floatchat-backend","timestamp":"2025-09-14T13:45:54.327Z"}
+{"level":"info","message":"FloatChat Backend Server running on port 3000","service":"floatchat-backend","timestamp":"2025-09-14T15:32:09.759Z"}
+{"level":"info","message":"Environment: undefined","service":"floatchat-backend","timestamp":"2025-09-14T15:32:09.763Z"}
+{"level":"info","message":"MongoDB Connected: ac-e7ldeur-shard-00-00.zwhg8bs.mongodb.net:27017/floatchat","service":"floatchat-backend","timestamp":"2025-09-14T15:32:09.981Z"}
+{"level":"info","message":"10.84.7.8 - - [14/Sep/2025:15:32:10 +0000] \"GET / HTTP/1.1\" 200 99 \"https://0b4dfc6a-92d5-4e3d-9786-ec5904e7c26f-00-1s00ap00vc9p7.pike.replit.dev:3000/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar4m%3A\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36\"","service":"floatchat-backend","timestamp":"2025-09-14T15:32:10.072Z"}
+{"level":"info","message":"10.84.7.8 - - [14/Sep/2025:15:32:10 +0000] \"GET / HTTP/1.1\" 200 99 \"https://0b4dfc6a-92d5-4e3d-9786-ec5904e7c26f-00-1s00ap00vc9p7.pike.replit.dev:3000/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar4n%3A\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36\"","service":"floatchat-backend","timestamp":"2025-09-14T15:32:10.107Z"}
