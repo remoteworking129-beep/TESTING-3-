@@ -21,8 +21,15 @@ connectDB();
 app.use(security);
 
 // CORS configuration
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  'https://0b4dfc6a-92d5-4e3d-9786-ec5904e7c26f-00-1s00ap00vc9p7.pike.replit.dev',
+  'http://localhost:5000',
+  'http://0.0.0.0:5000'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true,
   optionsSuccessStatus: 200
 }));
