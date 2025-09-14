@@ -3,6 +3,25 @@ const { validationResult } = require('express-validator');
 const logger = require('../config/logger');
 
 class UserController {
+  async getProfile(req, res) {
+    try {
+      const { userId } = req.params;
+      const authService = require('../services/authService');
+      const user = await authService.getUserById(userId);
+      
+      res.json({
+        success: true,
+        data: { user }
+      });
+    } catch (error) {
+      logger.error('Get profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   async updateProfile(req, res) {
     try {
       const errors = validationResult(req);
@@ -14,7 +33,7 @@ class UserController {
         });
       }
 
-      const userId = req.user.userId;
+      const { userId } = req.body;
       const user = await userService.updateProfile(userId, req.body);
 
       res.json({
@@ -43,8 +62,7 @@ class UserController {
         });
       }
 
-      const { currentPassword, newPassword } = req.body;
-      const userId = req.user.userId;
+      const { currentPassword, newPassword, userId } = req.body;
 
       await userService.changePassword(userId, currentPassword, newPassword);
 
@@ -64,7 +82,7 @@ class UserController {
 
   async deactivateAccount(req, res) {
     try {
-      const userId = req.user.userId;
+      const { userId } = req.body;
       await userService.deactivateAccount(userId);
 
       res.json({
